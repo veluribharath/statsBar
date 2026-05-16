@@ -2,25 +2,36 @@ import SwiftUI
 
 struct StatsPopupView: View {
     @EnvironmentObject var stats: StatsModel
+    @State private var showSettings = false
+
+    @AppStorage("showCPU")     private var showCPU     = true
+    @AppStorage("showMemory")  private var showMemory  = true
+    @AppStorage("showNetwork") private var showNetwork = true
+    @AppStorage("showDisk")    private var showDisk    = true
+    @AppStorage("showBattery") private var showBattery = true
 
     var body: some View {
         VStack(spacing: 0) {
             header
             Divider()
-            ScrollView(.vertical, showsIndicators: false) {
+            if showSettings {
+                settingsPanel
+                Divider()
+            }
+            ScrollView(.vertical, showsIndicators: true) {
                 VStack(spacing: 10) {
-                    cpuSection
-                    memorySection
-                    networkSection
-                    diskSection
-                    if stats.battery.isPresent { batterySection }
+                    if showCPU     { cpuSection }
+                    if showMemory  { memorySection }
+                    if showNetwork { networkSection }
+                    if showDisk    { diskSection }
+                    if showBattery && stats.battery.isPresent { batterySection }
                 }
                 .padding(14)
             }
             Divider()
             footer
         }
-        .frame(width: 310)
+        .frame(width: 310, height: 460)
         .background(.regularMaterial)
     }
 
@@ -34,6 +45,17 @@ struct StatsPopupView: View {
                 .font(.headline)
             Spacer()
             Button {
+                withAnimation(.easeInOut(duration: 0.15)) {
+                    showSettings.toggle()
+                }
+            } label: {
+                Image(systemName: showSettings ? "gearshape.fill" : "gearshape")
+                    .foregroundStyle(showSettings ? .blue : .secondary)
+            }
+            .buttonStyle(.plain)
+            .help("Toggle sections")
+
+            Button {
                 NSApp.terminate(nil)
             } label: {
                 Image(systemName: "power")
@@ -41,6 +63,28 @@ struct StatsPopupView: View {
             }
             .buttonStyle(.plain)
             .help("Quit statsBar")
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+    }
+
+    // MARK: – Settings panel
+
+    private var settingsPanel: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Visible sections")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 6) {
+                Toggle("CPU",     isOn: $showCPU)
+                Toggle("Memory",  isOn: $showMemory)
+                Toggle("Network", isOn: $showNetwork)
+                Toggle("Disk",    isOn: $showDisk)
+                if stats.battery.isPresent {
+                    Toggle("Battery", isOn: $showBattery)
+                }
+            }
+            .toggleStyle(.checkbox)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)

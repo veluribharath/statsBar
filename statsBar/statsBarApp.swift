@@ -9,8 +9,7 @@ struct statsBarApp: App {
             StatsPopupView()
                 .environmentObject(stats)
         } label: {
-            MenuBarLabel(cpuUsage: stats.cpuUsage,
-                         memPercent: stats.memory.percentage)
+            MenuBarLabel(stats: stats)
         }
         .menuBarExtraStyle(.window)
     }
